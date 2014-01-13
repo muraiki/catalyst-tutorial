@@ -1,0 +1,26 @@
+[% # This is a TT comment. - %]
+
+[%- # Provide a title - %]
+[% META title = 'Book List' -%]
+
+[% # '-' in TT code chomps beginning/trailing whitespace/newlines -%]
+
+<table>
+	<tr>
+		<th>Title</th>
+		<th>Rating</th>
+		<th>Author(s)</th>
+	</tr>
+
+	[% FOREACH book IN books -%]
+		<tr>
+			<td>[% book.title %]</td>
+			<td>[% book.rating %]</td>
+			<td>[% tt_authors = [];
+				   tt_authors.push(author.last_name) FOREACH author = book.authors %]
+				([% tt_authors.size | html %])
+				[% tt_authors.join(', ') | html %]
+			</td>
+		</tr>
+	[% END -%]
+</table>
