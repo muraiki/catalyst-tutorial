@@ -26,11 +26,13 @@ extends 'DBIx::Class::Core';
 
 =item * L<DBIx::Class::TimeStamp>
 
+=item * L<DBIx::Class::PassphraseColumn>
+
 =back
 
 =cut
 
-__PACKAGE__->load_components("InflateColumn::DateTime", "TimeStamp");
+__PACKAGE__->load_components("InflateColumn::DateTime", "TimeStamp", "PassphraseColumn");
 
 =head1 TABLE: C<book>
 
@@ -121,8 +123,8 @@ Composing rels: L</book_authors> -> author
 __PACKAGE__->many_to_many("authors", "book_authors", "author");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07039 @ 2014-01-13 20:45:16
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:jV9sbjEUg6o6nH5luTnfHg
+# Created by DBIx::Class::Schema::Loader v0.07039 @ 2014-01-14 10:00:30
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:o8mAggn2XVsMFUOHW64lmA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
@@ -168,5 +170,20 @@ sub author_list {
 
   return join('; ', @names);
 }
+
+
+=head2 delete_allowed_by
+
+Can the specified user delete the current book?
+
+=cut
+
+sub delete_allowed_by {
+    my ($self, $user) = @_;
+
+    # Only allow delete if user has 'admin' role
+    return $user->has_role('admin');
+}
+
 
 1;

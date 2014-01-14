@@ -3,11 +3,13 @@ package MyApp::Model::DB;
 use strict;
 use base 'Catalyst::Model::DBIC::Schema';
 
+
+my $dsn = $ENV{MYAPP_DSN} ||= 'dbi:SQLite:myapp.db';
 __PACKAGE__->config(
     schema_class => 'MyApp::Schema',
     
     connect_info => {
-        dsn => 'dbi:SQLite:myapp.db',
+        dsn => $dsn,
         user => '',
         password => '',
         on_connect_do => q{PRAGMA foreign_keys = ON},

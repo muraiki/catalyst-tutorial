@@ -1,6 +1,7 @@
 package MyApp::Controller::Books;
 use Moose;
 use namespace::autoclean;
+use MyApp::Form::Book;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -34,7 +35,7 @@ Fetch all book objects and pass to books/list.tt2 in stash to be displayed
 
 =cut
 
-sub list :Local {
+sub list :Chained('base') :PathPart('list') :Args(0) {
 	my ($self, $c) = @_;
 
 	$c->stash(books => [$c->model('DB::Book')->all]);
@@ -57,17 +58,21 @@ Create a book with the supplied title, rating, and author.
 sub url_create :Chained('base') :PathPart('url_create') :Args(3) {
 	my ($self, $c, $title, $rating, $author_id) = @_;
 
-	my $book = $c->model('DB::Book')->create({
-		title	=>	$title,
-		rating	=>	$rating
-		});
+	if ($c->check_user_roles('admin')) {
 
-	$book->add_to_book_authors({author_id => $author_id});
+		my $book = $c->model('DB::Book')->create({
+			title	=>	$title,
+			rating	=>	$rating
+			});
 
-	$c->stash(book	   => $book,
-			  template => 'books/create_done.tt2');
+		$book->add_to_book_authors({author_id => $author_id});
 
-	$c->response->header('Cache-Control' => 'no-cache');
+		$c->stash(book	   => $book,
+				  template => 'books/create_done.tt2');
+
+	} else {
+		$c->response->body('Unauthorized!');
+	}
 }
 
 
@@ -84,6 +89,10 @@ sub base :Chained('/') :PathPart('books') :CaptureArgs(0) {
 	$c->stash(resultset => $c->model('DB::Book'));
 
 	$c->log->debug('*** INSIDE BASE METHOD ***');
+
+	# load status messages
+	$c->load_status_msgs;
+
 }
 
 
@@ -108,6 +117,55 @@ sub object :Chained('base') :PathPart('id') :CaptureArgs(1) {
 	$c->log->debug("*** INSIDE OBJECT METHOD for obj id=$id ***");
 }
 
+
+=head2 create
+
+Use HTML::FormHandler to create a new book
+
+=cut
+
+sub create :Chained('base') :PathPart('create') :Args(0) {
+	my ($self, $c) = @_;
+
+	my $book = $c->model('DB::Book')->new_result({});
+	return $self->form($c, $book);
+}
+
+
+=head2 form
+
+Process the FormHandler book form
+
+=cut
+
+sub form {
+	my ( $self, $c, $book ) = @_;
+
+	my $form = MyApp::Form::Book->new;
+
+	$c->stash(template => 'books/form.tt2', form => $form);
+
+	$form->process(item => $book, params => $c->req->params);
+
+	return unless $form->validated;
+
+	# Set status message for the user and return to list
+	$c->response->redirect($c->uri_for($self->action_for('list'),
+		{ mid => $c->set_status_msg("Book created")}));
+}
+
+
+=head2 edit
+
+Edit an existing book with FormHandler
+
+=cut
+
+sub edit :Chained('object') :PathPart('edit') :Args(0) {
+	my ($self, $c) = @_;
+
+	return $self->form($c, $c->stash->{object});
+}
 
 =head2 form_create
 
@@ -156,19 +214,18 @@ Delete a book
 sub delete :Chained('object') :PathPart('delete') :Args(0) {
 	my ($self, $c) = @_;
 
-	my $book_title = $c->stash->{object}->title;
+	# Check permissions
+	$c->detach('/error_noperms')
+		unless $c->stash->{object}->delete_allowed_by($c->user->get_object);
 
-	# Use the book object saved by the object chain; delete it
-	# along with related book_author entries (see cascade
-	# in model)
+	# Save primary key id for status_msg
+	my $id = $c->stash->{object}->id;
+
 	$c->stash->{object}->delete;
 
-	# Set a staus message to be displayed at the top of the view
-	# Doesn't work now that we're using redirect instead of forward.
-	# $c->stash->{status_msg} = "$book_title deleted.";
-
 	$c->response->redirect($c->uri_for($self->action_for('list'),
-		{status_msg => "$book_title deleted."}));
+		{ mid => $c->set_status_msg("Deleted book $id")}));
+
 }
 
 

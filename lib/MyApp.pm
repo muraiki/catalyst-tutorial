@@ -22,6 +22,15 @@ use Catalyst qw/
     Static::Simple
 
     StackTrace
+
+    Authentication
+    Authorization::Roles
+
+    Session
+    Session::Store::File
+    Session::State::Cookie
+
+    StatusMessage
 /;
 
 extends 'Catalyst';
@@ -52,6 +61,18 @@ __PACKAGE__->config(
 		],
 	},
 );
+
+# Configure SimpleDB Authentication
+__PACKAGE__->config(
+    'Plugin::Authentication' => {
+        default => {
+            class           => 'SimpleDB',
+            user_model      => 'DB::User',
+            password_type   => 'self_check',
+        },
+    },
+);
+
 
 # Start the application
 __PACKAGE__->setup();
