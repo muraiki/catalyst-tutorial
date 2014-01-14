@@ -24,11 +24,13 @@ extends 'DBIx::Class::Core';
 
 =item * L<DBIx::Class::InflateColumn::DateTime>
 
+=item * L<DBIx::Class::TimeStamp>
+
 =back
 
 =cut
 
-__PACKAGE__->load_components("InflateColumn::DateTime");
+__PACKAGE__->load_components("InflateColumn::DateTime", "TimeStamp");
 
 =head1 TABLE: C<book>
 
@@ -54,6 +56,16 @@ __PACKAGE__->table("book");
   data_type: 'integer'
   is_nullable: 1
 
+=head2 created
+
+  data_type: 'timestamp'
+  is_nullable: 1
+
+=head2 updated
+
+  data_type: 'timestamp'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -63,6 +75,10 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "rating",
   { data_type => "integer", is_nullable => 1 },
+  "created",
+  { data_type => "timestamp", is_nullable => 1 },
+  "updated",
+  { data_type => "timestamp", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -105,13 +121,52 @@ Composing rels: L</book_authors> -> author
 __PACKAGE__->many_to_many("authors", "book_authors", "author");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07039 @ 2014-01-13 10:58:48
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:AuUx9USf6LZaVHjTR53/1A
+# Created by DBIx::Class::Schema::Loader v0.07039 @ 2014-01-13 20:45:16
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:jV9sbjEUg6o6nH5luTnfHg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
 
-# __PACKAGE__->many_to_many(authors => 'book_authors', 'author');
+#
+# Enable automatic date handling
+#
+
+__PACKAGE__->add_columns(
+  "created",
+  { data_type => 'timestamp', set_on_create => 1 },
+  "updated",
+  { data_type => 'timestamp', set_on_create => 1, set_on_update => 1},
+);
+
+=head2 author_count
+
+Return the number of authors for the current book
+
+=cut
+
+sub author_count {
+  my ($self) = @_;
+
+  return $self->authors->count;
+}
+
+
+=head2 author_list
+
+Return a comma-separated list of authors for the current book
+
+=cut
+
+sub author_list {
+  my ($self) = @_;
+
+  my @names;
+  foreach my $author ($self->authors) {
+    push(@names, $author->full_name_lastfirst);
+  }
+
+  return join('; ', @names);
+}
 
 1;

@@ -24,11 +24,13 @@ extends 'DBIx::Class::Core';
 
 =item * L<DBIx::Class::InflateColumn::DateTime>
 
+=item * L<DBIx::Class::TimeStamp>
+
 =back
 
 =cut
 
-__PACKAGE__->load_components("InflateColumn::DateTime");
+__PACKAGE__->load_components("InflateColumn::DateTime", "TimeStamp");
 
 =head1 TABLE: C<author>
 
@@ -105,10 +107,42 @@ Composing rels: L</book_authors> -> book
 __PACKAGE__->many_to_many("books", "book_authors", "book");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07039 @ 2014-01-13 10:58:48
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:nlXsnbVOerbE+H+g1RbgTg
+# Created by DBIx::Class::Schema::Loader v0.07039 @ 2014-01-13 20:45:16
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:ymWyXtGhAtoBlw40ogcYGg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
+
+#
+# Row-level helper methods
+#
+
+
+=head2 full_name
+
+Returns the full name
+
+=cut
+
+sub full_name {
+  my ($self) = @_;
+
+  return $self->first_name . ' ' . $self->last_name;
+}
+
+
+=head2 full_name_lastfirst
+
+Returns the full name but with the last name first,
+separated by a comma.
+
+=cut
+
+sub full_name_lastfirst {
+  my ($self) = @_;
+
+  return $self->last_name . ', ' . $self->first_name;
+}
+
 1;
