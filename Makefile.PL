@@ -24,9 +24,18 @@ requires 'Catalyst::Plugin::Session::Store::File';
 requires 'Catalyst::Plugin::Session::State::Cookie';
 requires 'Catalyst::Plugin::StatusMessage';
 requires 'Catalyst::Plugin::Authorization::Roles';
+requires 'Catalyst::Authentication::Realm::SimpleDB';
+requires 'Catalyst::View::TT';
+
+requires 'MooseX::MarkAsMethods';
+requires 'MooseX::NonMoose';
+
+requires 'DBIx::Class::TimeStamp';
+requires 'DBIx::Class::PassphraseColumn';
 
 requires 'Perl6::Junction';
 
+requires 'HTML::FormHandler::Moose';
 requires 'HTML::FormHandler::Model::DBIC';
 
 test_requires 'Test::More' => '0.88';
